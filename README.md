@@ -5,6 +5,7 @@ This assignment focuses on deploying a full MERN stack application to production
 ## Assignment Overview
 
 You will:
+
 1. Prepare your MERN application for production deployment
 2. Deploy the backend to a cloud platform
 3. Deploy the frontend to a static hosting service
@@ -39,11 +40,13 @@ You will:
 ## Deployment Platforms
 
 ### Backend Deployment Options
+
 - **Render**: Easy to use, free tier available
 - **Railway**: Developer-friendly, generous free tier
 - **Heroku**: Well-established, extensive documentation
 
 ### Frontend Deployment Options
+
 - **Vercel**: Optimized for React apps, easy integration
 - **Netlify**: Great for static sites, good CI/CD
 - **GitHub Pages**: Free, integrated with GitHub
@@ -51,6 +54,7 @@ You will:
 ## CI/CD Pipeline
 
 The assignment includes templates for setting up GitHub Actions workflows:
+
 - `frontend-ci.yml`: Tests and builds the React application
 - `backend-ci.yml`: Tests the Express.js backend
 - `frontend-cd.yml`: Deploys the frontend to your chosen platform
@@ -69,9 +73,21 @@ Your work will be automatically submitted when you push to your GitHub Classroom
 
 ## Resources
 
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [MongoDB Atlas Documentation](https://docs.atlas.mongodb.com/)
-- [Render Documentation](https://render.com/docs)
-- [Railway Documentation](https://docs.railway.app/)
-- [Vercel Documentation](https://vercel.com/docs)
-- [Netlify Documentation](https://docs.netlify.com/) 
+# Workspace skeleton added
+
+This repository previously contained only the assignment instructions. A minimal MERN skeleton has been added to help complete Week 7 tasks and demonstrate deployment/CI integrations.
+
+- `backend/`: minimal Express server with health route and optional MongoDB connection; `.env.example` is provided.
+- `frontend/`: minimal Vite + React app with example `VITE_API_URL` in `.env.example`.
+- `.github/workflows/`: simple CI templates for backend and frontend so you can demonstrate GitHub Actions.
+  -Quick commands to run the skeleton locally:
+
+```powershell
+cd backend; npm install; npm run dev
+# in another shell
+cd frontend; npm install; npm run dev
+```
+
+Next steps: wire your real application code into `frontend/` and `backend/`, update `.env` values, and configure your chosen hosts (Render/Vercel/Netlify) for deployment. Replace placeholder scripts with real lint/test commands when ready.
+
+Note: Docker support was removed from this repository at the user's request. If you need containerized workflows later, add a `Dockerfile` and `docker-compose.yml` back to the repo and update CI accordingly.
