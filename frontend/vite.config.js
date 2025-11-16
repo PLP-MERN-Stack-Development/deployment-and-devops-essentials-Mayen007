@@ -2,7 +2,6 @@ export default {
   build: {
     // Code splitting configuration for better caching
     rollupOptions: {
-      external: ['@sentry/react'],
       output: {
         manualChunks: {
           'vendor': ['react', 'react-dom'],
