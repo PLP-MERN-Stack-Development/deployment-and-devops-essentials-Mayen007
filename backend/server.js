@@ -5,6 +5,7 @@ const logger = require('./logger');
 const { PORT, MONGODB_URI, MONGODB_DB, CUSTOM_DOMAIN, SSL_KEY_PATH, SSL_CERT_PATH } = require('./config');
 const { connectDB } = require('./services/db');
 const createApp = require('./app');
+const http = require('http');
 
 async function start() {
   try {
@@ -14,13 +15,9 @@ async function start() {
 
     const app = createApp();
 
-    const sslOptions = {
-      key: fs.readFileSync(path.resolve(SSL_KEY_PATH)),
-      cert: fs.readFileSync(path.resolve(SSL_CERT_PATH)),
-    };
-
-    https.createServer(sslOptions, app).listen(PORT, () => {
-      const domain = CUSTOM_DOMAIN || `https://localhost:${PORT}`;
+    // Removed HTTPS configuration for Render
+    http.createServer(app).listen(PORT, () => {
+      const domain = CUSTOM_DOMAIN || `http://localhost:${PORT}`;
       logger.info(`Server listening on ${domain}`);
     });
   } catch (err) {
