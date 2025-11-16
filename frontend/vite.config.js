@@ -11,7 +11,7 @@ export default {
     },
     // Optimize chunk size for production
     chunkSizeWarningLimit: 1000,
-    minify: 'terser',
+    minify: 'esbuild',
     sourcemap: false,
   },
   // Development server configuration
