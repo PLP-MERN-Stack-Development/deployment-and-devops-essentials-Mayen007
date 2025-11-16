@@ -1,43 +1,22 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const mongoose = require('mongoose');
-const path = require('path');
+const logger = require('./logger')
+const { PORT, MONGODB_URI, MONGODB_DB } = require('./config')
+const { connectDB } = require('./services/db')
+const createApp = require('./app')
 
-dotenv.config({ path: path.join(__dirname, '.env') });
+async function start() {
+  try {
+    if (MONGODB_URI) {
+      await connectDB(MONGODB_URI, MONGODB_DB)
+    }
 
-const app = express();
-app.use(helmet());
-app.use(express.json());
-app.use(morgan('dev'));
-
-// Simple health route
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', time: new Date().toISOString() });
-});
-
-// Example API route
-app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Hello from backend' });
-});
-
-// DB connect (optional)
-const MONGODB_URI = process.env.MONGODB_URI || '';
-if (MONGODB_URI) {
-  mongoose
-    .connect(MONGODB_URI, { dbName: process.env.MONGODB_DB || undefined })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('Mongo connection error:', err));
+    const app = createApp()
+    app.listen(PORT, () => {
+      logger.info(`Server listening on port ${PORT}`)
+    })
+  } catch (err) {
+    logger.error('Failed to start server', { message: err.message })
+    process.exit(1)
+  }
 }
 
-// Error handler (simple)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+start()
