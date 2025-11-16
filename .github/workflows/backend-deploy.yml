@@ -1,0 +1,112 @@
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy to Render
+    runs-on: ubuntu-latest
+    env:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+      RENDER_SERVICE_URL: ${{ secrets.RENDER_SERVICE_URL }} # optional, used for /health check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Render secrets presence
+        run: |
+          if [ -z "$RENDER_API_KEY" ]; then
+            echo "RENDER_API_KEY is not set"; exit 1
+          else
+            echo "RENDER_API_KEY is present"
+          fi
+          if [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "RENDER_SERVICE_ID is not set"; exit 1
+          else
+            echo "RENDER_SERVICE_ID is present"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Trigger Render deploy
+        id: trigger
+        run: |
+          set -e
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID" ]; then
+            echo "RENDER_API_KEY and RENDER_SERVICE_ID must be set as repository secrets." >&2
+            exit 1
+          fi
+
+          echo "Triggering deploy for service $RENDER_SERVICE_ID"
+          resp=$(curl -s -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          deploy_id=$(echo "$resp" | jq -r .id)
+          if [ -z "$deploy_id" ] || [ "$deploy_id" = "null" ]; then
+            echo "Failed to create deploy:" >&2
+            echo "$resp" >&2
+            exit 1
+          fi
+
+          echo "deploy_id=$deploy_id" >> $GITHUB_OUTPUT
+
+      - name: Wait for deploy to finish
+        run: |
+          set -e
+          deploy_id=${{ steps.trigger.outputs.deploy_id }}
+          echo "Checking status for deploy $deploy_id"
+
+          # Poll until status is success or failed (timeout 15 minutes)
+          max_seconds=900
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $max_seconds ]; do
+            s=$(curl -s -H "Authorization: Bearer ${RENDER_API_KEY}" "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys/${deploy_id}" | jq -r .state)
+            echo "Deploy state: $s"
+            if [ "$s" = "success" ]; then
+              echo "Deploy succeeded"
+              break
+            fi
+            if [ "$s" = "failed" ]; then
+              echo "Deploy failed" >&2
+              exit 1
+            fi
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          if [ $elapsed -ge $max_seconds ]; then
+            echo "Timed out waiting for deploy" >&2
+            exit 1
+          fi
+
+      - name: "Optional verify /health endpoint"
+        if: env.RENDER_SERVICE_URL != ''
+        run: |
+          set -e
+          url="$RENDER_SERVICE_URL/health"
+          echo "Pinging $url"
+          # wait up to 60s for health
+          max=60
+          i=0
+          until curl -fsS "$url" -o /dev/null; do
+            i=$((i+5))
+            if [ $i -ge $max ]; then
+              echo "Health check failed" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo "Health check passed"

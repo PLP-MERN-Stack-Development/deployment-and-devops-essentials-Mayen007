@@ -1,0 +1,10 @@
+# Sample render.yaml - replace placeholders with actual values
+services:
+  - type: web
+    name: your-backend-service-name
+    env: node
+    plan: free
+    repo: your-github-username/your-repo-name
+    branch: main
+    buildCommand: cd backend && npm ci
+    startCommand: cd backend && npm start

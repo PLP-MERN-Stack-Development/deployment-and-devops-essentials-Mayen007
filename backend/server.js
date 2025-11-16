@@ -11,7 +11,7 @@ async function start() {
 
     const app = createApp()
     app.listen(PORT, () => {
-      logger.info(`Server listening on port ${PORT}`)
+      logger.info(`Server listening on port http://localhost:${PORT}`)
     })
   } catch (err) {
     logger.error('Failed to start server', { message: err.message })
