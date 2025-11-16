@@ -1,10 +1,21 @@
-# Sample render.yaml - replace placeholders with actual values
+# Render deployment configuration
+# This file defines services to be deployed on Render
+
 services:
   - type: web
-    name: your-backend-service-name
+    name: mern-backend
     env: node
     plan: free
-    repo: your-github-username/your-repo-name
+    repo: PLP-MERN-Stack-Development/deployment-and-devops-essentials-Mayen007
     branch: main
     buildCommand: cd backend && npm ci
     startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # Set via Render dashboard
+      - key: SENTRY_DSN
+        sync: false # Set via Render dashboard
+      - key: LOG_LEVEL
+        value: info

@@ -4,6 +4,7 @@ const morgan = require('morgan')
 const Sentry = require('@sentry/node')
 const { NODE_ENV, SENTRY_DSN } = require('./config')
 const healthRoutes = require('./routes/health')
+const cacheControl = require('./middleware/cacheControl')
 const notFoundHandler = require('./middleware/notFound')
 const errorHandler = require('./middleware/errorHandler')
 
@@ -25,6 +26,9 @@ function createApp() {
   // Request logging: dev vs production formats
   const morganFormat = NODE_ENV === 'production' ? 'combined' : 'dev'
   app.use(morgan(morganFormat))
+
+  // Cache control middleware
+  app.use(cacheControl)
 
   // Routes
   app.use('/', healthRoutes)
